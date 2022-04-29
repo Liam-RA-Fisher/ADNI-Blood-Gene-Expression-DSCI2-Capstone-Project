@@ -1,0 +1,127 @@
+---
+title: "DSCI Capstone Project Deeper Analysis"
+author: "Liam Fisher"
+date: "2/12/2022"
+output: html_document
+---
+
+# Overview
+
+## Objective
+
+I intend to do some exploratory analysis to see which gene expressions are associated with Alzheimer’s.
+
+ \
+ \
+
+## Data
+
+```{r air-quality, echo=FALSE, out.width = '33%', fig.align='center'}
+knitr::include_graphics("/Users/liamf/OneDrive/Documents/DataSci2/Capstone Project/ADNI_logo_vector.png", error = FALSE)
+```
+
+I am using the micro array gene expression and diagnosis data from the Alzheimer's Disease NeuroImaging Initiative. http://adni.loni.usc.edu/
+
+The data contains Alzheimer’s diagnoses based on MRI scans, PET scans, and professional evaluations.
+
+The data tables that I am using are: \
+**ADMIMERGE**: Contains basic patient information and their diagnoses.\
+**ADNI_Gene_Expression_Profile**: Contains gene expression data from blood samples.\
+
+ \
+ \
+
+# R Setup
+
+```{r, warning=FALSE, message=FALSE}
+library(tidyverse)
+
+# Reading in Data
+data <- read_csv("/Users/liamf/OneDrive/Documents/DataSci2/Capstone Project/data/data_prepped.csv")
+
+# Creating copy of data for column renaming
+data_col <- data
+names <- paste("col", as.character(1:49390), sep = "_")
+colnames(data_col) <- names
+```
+
+ \
+ \
+
+# ANOVA Analysis
+
+ANOVA will be used to test for associations between Diagnosis and the different Blood Gene Expressions.
+
+```{r, warning=FALSE, message=FALSE}
+# Code borrowed from previous work
+ano_data <- data.frame(x = character(), y = character(), p = double())
+
+# Will perform ANOVA between Diagnosis and Every Gene
+for (x in c(5:49390)) {
+  var = names[[x]]
+  frm <- formula(paste(var, "~col_2"))
+  aov <- aov(frm, data = data_col)
+  ano_data[nrow(ano_data) + 1,] <- c(var, "diagnosis", summary(aov)[[1]][["Pr(>F)"]][1])
+}
+
+ano_data <- ano_data %>%
+  mutate(p = as.numeric(p)) %>%
+  arrange(-desc(p))
+
+# Savning Results
+write_csv(ano_data, "/Users/liamf/OneDrive/Documents/DataSci2/Capstone Project/data/ano_data.csv")
+```
+
+```{r, warning=FALSE, message=FALSE}
+ano_data <- read_csv("/Users/liamf/OneDrive/Documents/DataSci2/Capstone Project/data/ano_data.csv")
+ano_data %>%
+  mutate(col_num = as.integer(str_remove(x, ".*_"))) %>%
+  arrange(-desc(col_num)) %>%
+  mutate(names = names(data)[5:49390]) %>%
+  arrange(-desc(p))
+```
+
+ \
+ \
+ 
+# Visualizing Top 4 Genes Most Associated With Diagnosis
+
+```{r, warning=FALSE, message=FALSE, fig.show='hold', out.width='50%'}
+ggplot(data_col, aes(x=col_2, y=col_8984, color = col_2)) + 
+  geom_boxplot() +
+  theme_minimal() +
+  xlab("Diagnosis") + ylab("Gene 11724079_s_at") +
+  theme(legend.position="none")
+
+ggplot(data_col, aes(x=col_2, y=col_12606, color = col_2)) + 
+  geom_boxplot() +
+  theme_minimal() +
+  xlab("Diagnosis") + ylab("Gene 11727701_a_at") +
+  theme(legend.position="none")
+
+ggplot(data_col, aes(x=col_2, y=col_49313, color = col_2)) + 
+  geom_boxplot() +
+  theme_minimal() +
+  xlab("Diagnosis") + ylab("Gene AFFX-HUMRGE/M10098_M_at") +
+  theme(legend.position="none")
+
+ggplot(data_col, aes(x=col_2, y=col_31399, color = col_2)) + 
+  geom_boxplot() +
+  theme_minimal() +
+  xlab("Diagnosis") + ylab("Gene 11746494_x_at") +
+  theme(legend.position="none")
+```
+
+ \
+ \
+
+# References
+
+- https://www.nature.com/articles/s41598-020-60595-1#Sec2
+- http://adni.loni.usc.edu/
+- https://www.nia.nih.gov/news/gene-expression-signatures-alzheimers-disease
+- https://docs.google.com/presentation/d/1ToU7-S_ShdAhbCs9ZFx4a9gGBNC5imRw-_5rznGWOaw/edit
+
+
+
+
