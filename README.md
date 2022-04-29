@@ -10,7 +10,7 @@
 
 ## Data
 
-<img src="https://github.com/Liam-RA-Fisher/Single-Door-Raspberry-Pi-Security-System/blob/master/reed.jpg" width=30% height=30%>
+<img src="https://github.com/Liam-RA-Fisher/ADNI-Blood-Gene-Expression-DSCI2-Capstone-Project/blob/main/ADNI_logo_vector.png" width=30% height=30%>
 
 I am using the micro array gene expression and diagnosis data from the Alzheimer’s Disease NeuroImaging Initiative.
 http://adni.loni.usc.edu/
@@ -57,19 +57,20 @@ Number of Genetic Expressions:    49390
 Patient Classifications:          CN, MCI, AD
 
 #### Distribution of Diagnoses
-<img src="https://github.com/Liam-RA-Fisher/Single-Door-Raspberry-Pi-Security-System/blob/master/reed.jpg" width=30% height=30%>
+<img src="https://github.com/Liam-RA-Fisher/Single-Door-Raspberry-Pi-Security-System/blob/master/reed.jpg" width=60% height=60%>
 
 ### Best Model
 The best model was the Extra Trees Classifier. Still it was not able to predict Alzheimers very well. There are many possible reasons for this which include: too little data, too little data in some target classes, too much disparity in target classes, genetic data not sufficient for diagnosis. The following image shows how well the ExtraTrees classifier performed on the test dataset.
 
-<img src="https://github.com/Liam-RA-Fisher/Single-Door-Raspberry-Pi-Security-System/blob/master/reed.jpg" width=30% height=30%>
+<img src="https://github.com/Liam-RA-Fisher/ADNI-Blood-Gene-Expression-DSCI2-Capstone-Project/blob/main/model_res.png" width=80% height=80%>
 
 ### Deeper Analysis Results.
 
 The following are box plots of gene distributions by diagnosis. The first plot is the result best gene as a result of the ANOVA repeated, and the second plot is the result of the gene with the highest Random Forest feature importance.
 
-<img src="https://github.com/Liam-RA-Fisher/Single-Door-Raspberry-Pi-Security-System/blob/master/reed.jpg" width=30% height=30%>
-<img src="https://github.com/Liam-RA-Fisher/Single-Door-Raspberry-Pi-Security-System/blob/master/reed.jpg" width=30% height=30%>
+<img src="https://github.com/Liam-RA-Fisher/ADNI-Blood-Gene-Expression-DSCI2-Capstone-Project/blob/main/aov.png" width=60% height=60%>
+
+<img src="https://github.com/Liam-RA-Fisher/ADNI-Blood-Gene-Expression-DSCI2-Capstone-Project/blob/main/rfimp.png" width=60% height=60%>
 
 ## References
 - https://www.nature.com/articles/s41598-020-60595-1#Sec2
