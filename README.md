@@ -68,7 +68,7 @@ The best model was the Extra Trees Classifier. Still, it was not able to predict
 
 <img src="https://github.com/Liam-RA-Fisher/ADNI-Blood-Gene-Expression-DSCI2-Capstone-Project/blob/main/model_res.png" width=80% height=80%>
 
-### Deeper Analysis Results.
+### Deeper Analysis Results
 
 The following are box plots of gene distributions by diagnosis. The first plot is a boxplot of the best gene by diagnosis as a result of the ANOVA repeated, and the second plot is a boxplot of the best gene by diagnosis with the highest Random Forest feature importance.
 
