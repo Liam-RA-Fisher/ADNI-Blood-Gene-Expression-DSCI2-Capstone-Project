@@ -57,7 +57,7 @@ Number of Genetic Expressions:    49390
 Patient Classifications:          CN, MCI, AD
 
 #### Distribution of Diagnoses
-<img src="https://github.com/Liam-RA-Fisher/Single-Door-Raspberry-Pi-Security-System/blob/master/diagnoses.png" width=60% height=60%>
+<img src="https://github.com/Liam-RA-Fisher/ADNI-Blood-Gene-Expression-DSCI2-Capstone-Project/blob/main/diagnoses.png" width=60% height=60%>
 
 ### Best Model
 The best model was the Extra Trees Classifier. Still it was not able to predict Alzheimers very well. There are many possible reasons for this which include: too little data, too little data in some target classes, too much disparity in target classes, genetic data not sufficient for diagnosis. The following image shows how well the ExtraTrees classifier performed on the test dataset.
