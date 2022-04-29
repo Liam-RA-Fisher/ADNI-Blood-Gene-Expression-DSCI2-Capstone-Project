@@ -48,3 +48,37 @@ A further analysis of the genetic data. Here the Analysis of Variance is used to
 A continuation of the deeper analysis. Here Random Forest feature importances are used to detect which Genes are the most usefull in preicting Alzheimers.
 
 **Note:** Each Notebook / Markdown is rendered into an html file.
+
+## Results
+
+### Prepped Data
+Number of Participants in Data:   774
+Number of Genetic Expressions:    49390
+Patient Classifications:          CN, MCI, AD
+
+#### Distribution of Diagnoses
+<img src="https://github.com/Liam-RA-Fisher/Single-Door-Raspberry-Pi-Security-System/blob/master/reed.jpg" width=30% height=30%>
+
+### Best Model
+The best model was the Extra Trees Classifier. Still it was not able to predict Alzheimers very well. There are many possible reasons for this which include: too little data, too little data in some target classes, too much disparity in target classes, genetic data not sufficient for diagnosis. The following image shows how well the ExtraTrees classifier performed on the test dataset.
+
+<img src="https://github.com/Liam-RA-Fisher/Single-Door-Raspberry-Pi-Security-System/blob/master/reed.jpg" width=30% height=30%>
+
+### Deeper Analysis Results.
+
+The following are box plots of gene distributions by diagnosis. The first plot is the result best gene as a result of the ANOVA repeated, and the second plot is the result of the gene with the highest Random Forest feature importance.
+
+<img src="https://github.com/Liam-RA-Fisher/Single-Door-Raspberry-Pi-Security-System/blob/master/reed.jpg" width=30% height=30%>
+<img src="https://github.com/Liam-RA-Fisher/Single-Door-Raspberry-Pi-Security-System/blob/master/reed.jpg" width=30% height=30%>
+
+## References
+- https://www.nature.com/articles/s41598-020-60595-1#Sec2
+- http://adni.loni.usc.edu/
+- https://www.nia.nih.gov/news/gene-expression-signatures-alzheimers-disease
+- https://www.alz.org/media/documents/alzheimers-facts-and-figures.pdf
+- https://www.ajmc.com/view/economic-burden-of-alzheimer-disease-and-managed-care-considerations
+- https://www.tensorflow.org/tutorials/keras/classification
+- https://github.com/ageron/handson-ml2/blob/master/10_neural_nets_with_keras.ipynb
+- https://ekamperi.github.io/machine%20learning/2021/01/21/encoder-decoder-model.html
+- Presentation
+- https://pbpython.com/categorical-encoding.html
