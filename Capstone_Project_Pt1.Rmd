@@ -1,0 +1,265 @@
+---
+title: "DSCI Capstone Project Prep"
+author: "Liam Fisher"
+date: "2/12/2022"
+output:
+  rmdformats::robobook:
+    self_contained: true
+    thumbnails: false
+    lightbox: true
+    gallery: false
+    highlight: tango
+---
+
+# Overview
+
+## Background
+
+- 1 in 9 Americans older than 65 have Alzheimer’s dementia
+- Treatment in the United States cost $305 billion in 2020
+- 12.5 million projected to have Alzheimer’s dementia by 2050
+- Disease still not fully understood
+- Alzheimer’s has certain gene expressions: https://www.nia.nih.gov/news/gene-expression-signatures-alzheimers-disease
+
+## Data
+
+```{r air-quality, echo=FALSE, out.width = '33%', fig.align='center'}
+knitr::include_graphics("/Users/liamf/OneDrive/Documents/DataSci2/Capstone Project/ADNI_logo_vector.png", error = FALSE)
+```
+
+I am using the micro array gene expression and diagnosis data from the Alzheimer's Disease NeuroImaging Initiative. http://adni.loni.usc.edu/
+
+The data contains Alzheimer’s diagnoses based on MRI scans, PET scans, and professional evaluations.
+
+The data tables that I am using are: \
+**ADMIMERGE**: Contains basic patient information and their diagnoses.\
+**ADNI_Gene_Expression_Profile**: Contains gene expression data from blood samples.\
+
+## Objective
+
+I plan on using the blood gene expression data to build a predictive model for the detection of Alzheimer’s data. I also intend to do some exploratory analysis to see which gene expressions are associated with Alzheimer’s.
+
+# Data Prep
+
+## Imports and Markdown Setup
+
+### R setup
+
+```{r, warning=FALSE, message=FALSE}
+library(tidyverse)
+library(reticulate)
+library(tblhelpr)
+Sys.setenv(RETICULATE_PYTHON = "/Users/liamf/miniconda3/envs/dsci2_py38/python.exe")
+use_condaenv("dsci2_py38", required = TRUE)
+```
+
+### Python Setup
+
+```{python}
+import pandas as pd
+import numpy as np
+from sklearn.model_selection import StratifiedShuffleSplit
+import matplotlib.pyplot as plt
+import seaborn as sns
+```
+
+## Reading and Processing Diagnosis Data
+
+```{r, warning=FALSE, message=FALSE}
+# Some of this code from previous work.
+# Pipe for wrangling Diagnosis data.
+diagnosis <- read_csv(
+  "/Users/liamf/OneDrive/Documents/DataSci2/Capstone Project/data/ADNIMERGE.csv"
+  ) %>%
+  mutate(RID = as.integer(RID)) %>%
+  mutate(study_enrolled = case_when(RID < 2000 ~ "ADNI1",
+    RID >= 2000 & RID < 4000  ~ "ADNIGO",
+    RID >= 4000 & RID < 6000  ~ "ADNI2",
+    RID > 6000 ~ "ADNI3")
+  ) %>%
+  mutate(baseline_diagnosis = recode(DX_bl,
+                                     EMCI = "MCI",
+                                     LMCI = "MCI",
+                                     SMC = "CN")) %>%
+  rename(VISCODE2 = VISCODE) %>%
+  filter(VISCODE2 == "bl") %>%
+  select(RID, baseline_diagnosis, study_enrolled, VISCODE2)
+
+diagnosis
+```
+
+### Missing Data
+
+```{r, warning=FALSE, message=FALSE}
+# Viewing # missing for each column.
+diagnosis %>%
+  summarise_all(funs(sum(is.na(.)))) %>%
+  rowid_to_column() %>%
+  transpose_tibble(rowid) %>%
+  rename()
+```
+
+Original diagnoses are actually missing.
+
+### RID (patient) Key
+
+```{r, warning=FALSE, message=FALSE}
+max(
+  diagnosis %>%
+    group_by(RID) %>%
+    summarise(count = n()) %>%
+    arrange(desc(count)) %>%
+    select(count)
+)
+```
+
+The RID (patient ID's) occur no more than once. They correctly serve as a key.
+
+## Reading and Processing Genetic Data
+
+```{r, warning=FALSE, message=FALSE}
+# Data Wrangling pipe for genetic data.
+ADNI1GO2_genes <- read_csv("/Users/liamf/OneDrive/Documents/DataSci2/Capstone Project/data/ADNI_Gene_Expression_Profile.csv") %>%
+  select(-"...2", -"...3") %>%
+  transpose_tibble(Phase, id_col = "former_columns") %>%
+  mutate(RID = str_replace(SubjectID, ".+?(_S_)", "")) %>%
+  mutate(RID = as.integer(RID)) %>%
+  select(RID, everything()) %>%
+  select(-Visit, -former_columns, -SubjectID,
+         -"260/280", -"260/230", -"RIN", -"Affy Plate",
+         -"YearofCollection", -"ProbeSet") %>%
+  drop_na()
+
+ADNI1GO2_genes
+```
+
+### Key Check
+
+```{r, warning=FALSE, message=FALSE}
+max(
+  ADNI1GO2_genes %>%
+    group_by(RID) %>%
+    summarise(count = n()) %>%
+    arrange(desc(count)) %>%
+    select(count)
+)
+```
+
+The RID (patient ID's) occur no more than once. They correctly serve as a key.
+
+## Writing Prepped Data to CSV's
+
+```{r, warning=FALSE, message=FALSE}
+write_csv(ADNI1GO2_genes, "/Users/liamf/OneDrive/Documents/DataSci2/Capstone Project/data/genes_prepped.csv")
+```
+
+### Joining Diagnosis Table to Gene Expression and Writing to CSV
+
+```{r, warning=FALSE, message=FALSE}
+data_prepped <- diagnosis %>%
+  inner_join(ADNI1GO2_genes, by = "RID")
+
+write_csv(data_prepped, "/Users/liamf/OneDrive/Documents/DataSci2/Capstone Project/data/data_prepped.csv")
+```
+
+## Summary
+
+The resulting table after the data wrangling has the following characteristics:
+
+**N Row: ** 774, corresponds to 774 people. \
+**N Col: ** 49390, most of these are the blood gene expressions for various genes. \
+**Classes: ** There are three target classes: CN (cognitively normal), MCI (mild cognitive impairment), AD (Alzheimer's Disease).
+
+# Data Visualization and Prep for Modelling in SKLearn
+
+```{r, warning=FALSE, message=FALSE}
+data_prepped %>%
+  ggplot(aes(baseline_diagnosis)) +
+    geom_bar(fill = "#1c0080") +
+    geom_text(stat='count', aes(label=..count..), vjust=-0.3) +
+    theme_minimal() +
+    xlab("Diagnosis") + ylab("Number of People")
+
+data_prepped %>%
+  rename("gene" = "11715100_at") %>%
+  mutate("Example_Gene_Expression" = as.double(gene)) %>%
+  select("Example_Gene_Expression") %>%
+  ggplot(aes(Example_Gene_Expression)) +
+    geom_histogram(fill = "#1c0080") +
+    theme_minimal() +
+    xlab("Example Gene Expression") + ylab("Frequency")
+```
+
+Due to the small number of those diagnosed with Alzheimer's in the data, a StratifiedShuffleSplit will be used to split the data into training and testing.
+
+## Reading and Splitting Data Read Into Pandas
+
+```{python}
+pandas_data_prepped = pd.read_csv('/Users/liamf/OneDrive/Documents/DataSci2/Capstone Project/data/data_prepped.csv')
+```
+
+### Checking Data Types
+
+```{python}
+print(pandas_data_prepped.iloc[: , :8].dtypes)
+```
+
+```{python}
+# Performing a Stratified Shuffle Split on the diagnosis variable.
+split = StratifiedShuffleSplit(n_splits=1, test_size=0.25, random_state=42)
+for train_index, test_index in split.split(pandas_data_prepped, pandas_data_prepped["baseline_diagnosis"]):
+    strat_train_set = pandas_data_prepped.loc[train_index]
+    strat_test_set = pandas_data_prepped.loc[test_index]
+
+print(strat_test_set["baseline_diagnosis"].value_counts())
+```
+
+```{python}
+strat_train_set.to_csv('/Users/liamf/OneDrive/Documents/DataSci2/Capstone Project/data/train_set.csv')
+strat_test_set.to_csv('/Users/liamf/OneDrive/Documents/DataSci2/Capstone Project/data/test_set.csv')
+```
+
+## Data Visualization
+
+```{python}
+# pairplot
+pair1 = sns.pairplot(data=strat_train_set.iloc[:,5:10])
+plt.show()
+plt.clf()
+
+# pairplot with diagnosis diferentiation
+pair2 = sns.pairplot(data=strat_train_set.iloc[:,[1,5,6,7,8,9,10]], hue = "baseline_diagnosis")
+plt.show()
+plt.clf()
+```
+
+```{python}
+# dataprep for correlation heatmap
+df_sub = strat_train_set.iloc[:,4: ].sample(n=10, axis='columns', random_state=42)
+cor = df_sub.corr()
+```
+
+```{python}
+# Triangle correlation heatmap
+mask = np.triu(np.ones_like(cor, dtype=np.bool))
+heatmap = sns.heatmap(df_sub.corr(), mask=mask, vmin=-1, vmax=1, annot=True, cmap='BrBG')
+plt.show()
+plt.clf()
+```
+
+## Considerations for Part 2 (Modelling)
+
+- The number of columns far outweighs the number of rows which will have to be accounted for when choosing model's.
+- Variable selection is key as 49,390 variables is too many for 774 rows. PCA, ANOVA, models with their own variable selection are all options.
+- Over fitting will also be a huge concern. The models that are trained will have to account for this and the hyperperameters will likely have to do lots of regularization.
+
+# References
+
+- https://www.nature.com/articles/s41598-020-60595-1#Sec2
+- http://adni.loni.usc.edu/
+- https://www.nia.nih.gov/news/gene-expression-signatures-alzheimers-disease
+- https://docs.google.com/presentation/d/1ToU7-S_ShdAhbCs9ZFx4a9gGBNC5imRw-_5rznGWOaw/edit
+
+
+
+
